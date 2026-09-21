@@ -1,0 +1,33 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# builds
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# expo
+apps/mobile/.expo/
+apps/mobile/android/
+apps/mobile/ios/
+*.jks
+*.keystore
+
+# supabase
+supabase/.branches/
+supabase/.temp/
+
+# misc
+.DS_Store
+*.log
+coverage/
+.vercel

@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "HostelHub PMS",
+    "slug": "hostelhub-pms",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "hostelhub",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "android": {
+      "package": "com.hostelhub.pms",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_MEDIA_IMAGES",
+        "READ_EXTERNAL_STORAGE",
+        "POST_NOTIFICATIONS",
+        "CALL_PHONE"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-image-picker",
+      "expo-camera",
+      "expo-notifications"
+    ],
+    "extra": {
+      "eas": { "projectId": "replace-with-your-eas-project-id" }
+    }
+  }
+}

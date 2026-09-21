@@ -1,0 +1,22 @@
+{
+  "name": "hostelhub-pms",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:mobile": "pnpm --filter mobile start",
+    "dev:site": "pnpm --filter public-site dev",
+    "build:web": "pnpm --filter web build",
+    "build:site": "pnpm --filter public-site build",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:reset": "supabase db reset",
+    "supabase:push": "supabase db push",
+    "supabase:types": "supabase gen types typescript --linked > packages/shared/src/types/database.ts"
+  },
+  "devDependencies": {
+    "supabase": "^1.200.0",
+    "typescript": "^5.5.4"
+  },
+  "packageManager": "pnpm@9.7.0"
+}
