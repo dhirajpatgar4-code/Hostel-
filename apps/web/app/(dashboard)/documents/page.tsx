@@ -1,9 +1,9 @@
 "use client";
-import { useRef, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Folder, FileText, Upload, FolderPlus, Search, ChevronRight,
-  Trash2, Download, Eye, Pencil, Home, ArrowLeft,
+  Trash2, Download, Eye, Pencil, Home,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +21,17 @@ import {
 import { getFileSignedUrl } from "@/features/documents/api";
 import type { DocumentRecord, DocumentFolder } from "@/features/documents/types";
 
+// ─── Wrapper: provides the Suspense boundary that useSearchParams requires
 export default function DocumentsPage() {
+  return (
+    <Suspense fallback={<div className="h-40 bg-muted rounded animate-pulse" />}>
+      <DocumentsInner />
+    </Suspense>
+  );
+}
+
+// ─── The real page
+function DocumentsInner() {
   const { property } = useProperty();
   const propertyId = property?.id ?? "";
   const router = useRouter();
@@ -80,7 +90,6 @@ export default function DocumentsPage() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Documents</h1>
@@ -96,7 +105,6 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      {/* Search + breadcrumb */}
       <Card>
         <CardContent className="p-3 flex flex-wrap items-center gap-2">
           <div className="flex-1 min-w-[200px] relative">
@@ -132,7 +140,6 @@ export default function DocumentsPage() {
         </CardContent>
       </Card>
 
-      {/* Search results or folder/file list */}
       {showSearch ? (
         <Card>
           <CardContent className="p-0">
@@ -156,7 +163,6 @@ export default function DocumentsPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Sidebar: folder tree */}
           <Card className="md:col-span-1 h-fit">
             <CardContent className="p-2">
               <button
@@ -182,7 +188,6 @@ export default function DocumentsPage() {
             </CardContent>
           </Card>
 
-          {/* Main: current folder contents */}
           <div className="md:col-span-3 space-y-4">
             {loadingFolders || loadingFiles ? (
               <div className="h-40 bg-muted rounded animate-pulse" />
@@ -261,7 +266,6 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* Dialogs */}
       <NewFolderDialog
         open={newFolderOpen}
         onOpenChange={setNewFolderOpen}
@@ -357,9 +361,15 @@ function FileRow({
         </div>
       </button>
       <div className="flex gap-1">
-        <Button size="sm" variant="ghost" onClick={() => onOpen(doc)}><Eye className="h-3.5 w-3.5" /></Button>
-        <Button size="sm" variant="ghost" onClick={() => onDownload(doc)}><Download className="h-3.5 w-3.5" /></Button>
-        <Button size="sm" variant="ghost" onClick={() => onRename(doc)}><Pencil className="h-3.5 w-3.5" /></Button>
+        <Button size="sm" variant="ghost" onClick={() => onOpen(doc)}>
+          <Eye className="h-3.5 w-3.5" />
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => onDownload(doc)}>
+          <Download className="h-3.5 w-3.5" />
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => onRename(doc)}>
+          <Pencil className="h-3.5 w-3.5" />
+        </Button>
         <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onDelete(doc)}>
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
@@ -375,17 +385,31 @@ function NewFolderDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) setName(""); }}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>New Folder</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>New Folder</DialogTitle>
+        </DialogHeader>
         <form
-          onSubmit={async (e) => { e.preventDefault(); if (!name) return; await onSubmit(name); setName(""); }}
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (!name) return;
+            await onSubmit(name);
+            setName("");
+          }}
           className="space-y-4"
         >
           <div className="space-y-1">
             <Label>Folder name *</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Water Bills / Ads / Agreements" required />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Water Bills / Ads / Agreements"
+              required
+            />
           </div>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
             <Button type="submit" disabled={!name}>Create</Button>
           </div>
         </form>
@@ -407,9 +431,17 @@ function UploadDialog({
   const [description, setDescription] = useState("");
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) { setFile(null); setTitle(""); setDescription(""); } }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        onOpenChange(o);
+        if (!o) { setFile(null); setTitle(""); setDescription(""); }
+      }}
+    >
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>Upload file</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Upload file</DialogTitle>
+        </DialogHeader>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -430,7 +462,12 @@ function UploadDialog({
                 if (f && !title) setTitle(f.name);
               }}
             />
-            <Button type="button" variant="outline" className="w-full" onClick={() => fileRef.current?.click()}>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => fileRef.current?.click()}
+            >
               <Upload className="h-4 w-4 mr-2" /> {file ? file.name : "Select file"}
             </Button>
             <p className="text-xs text-muted-foreground">Any file type · max 50 MB</p>
@@ -438,7 +475,11 @@ function UploadDialog({
 
           <div className="space-y-1">
             <Label>Title</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Water bill Sep 2026" />
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Water bill Sep 2026"
+            />
           </div>
 
           <div className="space-y-1">
@@ -447,7 +488,9 @@ function UploadDialog({
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
             <Button type="submit" disabled={!file}>Upload</Button>
           </div>
         </form>
@@ -470,11 +513,21 @@ function RenameDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>{title}</DialogTitle></DialogHeader>
-        <form onSubmit={async (e) => { e.preventDefault(); if (name) await onSubmit(name); }} className="space-y-4">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (name) await onSubmit(name);
+          }}
+          className="space-y-4"
+        >
           <Input value={name} onChange={(e) => setName(e.target.value)} required />
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
             <Button type="submit">Save</Button>
           </div>
         </form>
