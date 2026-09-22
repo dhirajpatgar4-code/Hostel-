@@ -10,11 +10,12 @@
     "android": {
       "package": "com.hostelhub.pms",
       "permissions": [
-        "CAMERA",
-        "READ_MEDIA_IMAGES",
-        "READ_EXTERNAL_STORAGE",
-        "POST_NOTIFICATIONS",
-        "CALL_PHONE"
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.CALL_PHONE",
+        "android.permission.RECORD_AUDIO"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
@@ -30,6 +31,9 @@
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "deb74541-581b-43e1-b256-5599b9d90323"
       }
     }
   }
