@@ -1,0 +1,13 @@
+**/.next
+**/node_modules
+**/.expo
+**/dist
+**/build
+**/.turbo
+**/coverage
+**/recover.sh
+**/fix.sh
+**/pre-push-check.sh
+**/.env
+**/.env.local
+**/.env.*.local
