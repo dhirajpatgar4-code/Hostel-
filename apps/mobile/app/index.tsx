@@ -1,7 +1,8 @@
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { View, ActivityIndicator } from "react-native";
+import { supabase } from "@/lib/supabase";
+import { colors } from "@/lib/theme";
 
 export default function Index() {
   const [ready, setReady] = useState(false);
@@ -14,6 +15,12 @@ export default function Index() {
     });
   }, []);
 
-  if (!ready) return <View style={{ flex: 1, justifyContent: "center" }}><ActivityIndicator /></View>;
+  if (!ready) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", backgroundColor: colors.bg }}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
   return <Redirect href={authed ? "/(tabs)" : "/(auth)/login"} />;
 }

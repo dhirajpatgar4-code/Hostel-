@@ -6,25 +6,19 @@
     "orientation": "portrait",
     "scheme": "hostelhub",
     "userInterfaceStyle": "automatic",
-    "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+    "newArchEnabled": false,
     "android": {
       "package": "com.hostelhub.pms",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
       "permissions": [
         "CAMERA",
         "READ_MEDIA_IMAGES",
         "READ_EXTERNAL_STORAGE",
         "POST_NOTIFICATIONS",
         "CALL_PHONE"
-      ]
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
     },
     "plugins": [
       "expo-router",
@@ -34,7 +28,9 @@
       "expo-notifications"
     ],
     "extra": {
-      "eas": { "projectId": "replace-with-your-eas-project-id" }
+      "router": {
+        "origin": false
+      }
     }
   }
 }

@@ -1,11 +1,12 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DoorOpen, Users, CreditCard, Zap, Receipt, ListChecks, Phone, Package, FileText } from "lucide-react";
 
 export default async function DashboardHome() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Get user's first property
   const { data: membership } = await supabase
     .from("property_users")
     .select("property_id, role, properties(name)")
@@ -26,6 +27,18 @@ export default async function DashboardHome() {
     ? Math.round((Number(occupancy.occupied_beds) / Number(occupancy.total_capacity)) * 100)
     : 0;
 
+  const quickLinks = [
+    { href: "/rooms", label: "Rooms", icon: DoorOpen },
+    { href: "/tenants", label: "Tenants", icon: Users },
+    { href: "/payments", label: "Payments", icon: CreditCard },
+    { href: "/electricity", label: "Electricity", icon: Zap },
+    { href: "/expenses", label: "Expenses", icon: Receipt },
+    { href: "/tasks", label: "Tasks", icon: ListChecks },
+    { href: "/inventory", label: "Inventory", icon: Package },
+    { href: "/contacts", label: "Contacts", icon: Phone },
+    { href: "/documents", label: "Documents", icon: FileText },
+  ];
+
   return (
     <div className="space-y-6">
       <div>
@@ -42,6 +55,24 @@ export default async function DashboardHome() {
         <StatCard label="Occupied Beds" value={occupancy.occupied_beds} />
         <StatCard label="Available Beds" value={occupancy.available_beds} />
       </div>
+
+      <Card>
+        <CardHeader><CardTitle>Quick Actions</CardTitle></CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {quickLinks.map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:border-primary/50 hover:bg-muted/40 transition-colors"
+              >
+                <Icon className="h-5 w-5 text-muted-foreground" />
+                <span className="text-sm font-medium">{label}</span>
+              </Link>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
