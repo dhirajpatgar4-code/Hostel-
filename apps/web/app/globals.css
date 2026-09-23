@@ -48,3 +48,70 @@
   * { @apply border-border; }
   body { @apply bg-background text-foreground; }
 }
+/* Mobile polish */
+@media (max-width: 767px) {
+  /* Prevent iOS auto-zoom on input focus */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+
+  /* Smooth scrolling for tab strips */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .overflow-x-auto::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Touch-friendly minimum targets */
+  button, a, [role="button"] {
+    min-height: 36px;
+  }
+}
+
+/* ── Production polish ───────────────────────────────── */
+
+/* Softer shadows */
+.shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04); }
+.shadow    { box-shadow: 0 2px 6px -1px rgb(0 0 0 / 0.06), 0 1px 3px -1px rgb(0 0 0 / 0.04); }
+.shadow-md { box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 6px -2px rgb(0 0 0 / 0.05); }
+.shadow-lg { box-shadow: 0 10px 24px -4px rgb(0 0 0 / 0.10), 0 4px 10px -4px rgb(0 0 0 / 0.06); }
+.shadow-xl { box-shadow: 0 20px 40px -8px rgb(0 0 0 / 0.12), 0 8px 16px -8px rgb(0 0 0 / 0.08); }
+
+/* Card hover lift */
+.hover\:shadow-md:hover { box-shadow: 0 6px 16px -4px rgb(0 0 0 / 0.10); }
+
+/* Smooth transitions */
+* { transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+
+/* Better focus rings */
+button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Nicer scrollbars */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.4); }
+
+/* Page enter animation */
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+main > * { animation: page-fade-in 200ms ease-out; }
+
+/* Table zebra stripes for readability */
+table tbody tr:nth-child(even) { background: hsl(var(--muted) / 0.3); }
+table tbody tr:hover { background: hsl(var(--accent) / 0.5); }
+
+/* Sticky table headers on desktop */
+@media (min-width: 768px) {
+  table thead { position: sticky; top: 0; z-index: 5; backdrop-filter: blur(8px); }
+}

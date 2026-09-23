@@ -16,6 +16,7 @@ import { useRoomAllocations } from "@/features/tenants/hooks";
 import { RoomForm } from "@/features/rooms/components/room-form";
 import { RoomAssets } from "@/features/rooms/components/room-assets";
 import { RoomImages } from "@/features/rooms/components/room-images";
+import { RoomDocuments } from "@/features/rooms/components/room-documents";
 import { RoomElectricity } from "@/features/electricity/components/room-electricity";
 import { RoomExpenses } from "@/features/rooms/components/room-expenses";
 import { RoomTasks } from "@/features/rooms/components/room-tasks";
@@ -48,13 +49,8 @@ export default function RoomDetailPage() {
         .from("tenants")
         .select("id, full_name, phone, profile_photo_url")
         .in("id", tenantIds);
-      const m: Record<
-        string,
-        { id: string; full_name: string; phone: string | null; profile_photo_url: string | null }
-      > = {};
-      (data ?? []).forEach((t) => {
-        m[t.id] = t;
-      });
+      const m: Record<string, any> = {};
+      (data ?? []).forEach((t) => { m[t.id] = t; });
       return m;
     },
   });
@@ -62,23 +58,16 @@ export default function RoomDetailPage() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-32 bg-muted rounded animate-pulse" />
-        ))}
+        {[...Array(3)].map((_, i) => <div key={i} className="h-32 bg-muted rounded animate-pulse" />)}
       </div>
     );
   }
-
   if (!room) {
     return (
       <EmptyState
         icon={DoorOpen}
         title="Room not found"
-        action={
-          <Button asChild>
-            <Link href="/rooms">Back to Rooms</Link>
-          </Button>
-        }
+        action={<Button asChild><Link href="/rooms">Back to Rooms</Link></Button>}
       />
     );
   }
@@ -88,64 +77,58 @@ export default function RoomDetailPage() {
   const activeTenant = activeAlloc ? tenantsMap[activeAlloc.tenant_id] : null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/rooms")}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold">Room {room.room_number}</h1>
-            <StatusBadge
-              value={room.archived ? "inactive" : activeAlloc ? "fully_occupied" : "available"}
-            />
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header — mobile friendly */}
+      <div className="space-y-3">
+        <div className="flex items-start gap-2">
+          <Button variant="ghost" size="icon" className="shrink-0 -ml-1" onClick={() => router.push("/rooms")}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl sm:text-xl sm:text-2xl font-semibold">Room {room.room_number}</h1>
+              <StatusBadge value={room.archived ? "inactive" : activeAlloc ? "fully_occupied" : "available"} />
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              {room.room_type ?? "—"} · Floor {room.floor ?? "—"} · Capacity {room.capacity}
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {room.room_type ?? "—"} · Floor {room.floor ?? "—"} · Capacity {room.capacity}
-          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setEditOpen(true)}>
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={() => setEditOpen(true)}>
             <Pencil className="h-4 w-4 mr-1" /> Edit
           </Button>
-          <Button variant="outline" onClick={() => setConfirmArchive(true)}>
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={() => setConfirmArchive(true)}>
             <Archive className="h-4 w-4 mr-1" /> Archive
           </Button>
         </div>
       </div>
 
       <Card>
-        <CardContent className="p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <CardContent className="p-4 sm:p-6 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <Info label="Capacity" value={room.capacity} />
           <Info label="Floor" value={room.floor ?? "—"} />
           <Info label="Type" value={room.room_type ?? "—"} />
           <Info
-            label="Drive Folder"
+            label="Drive"
             value={
               room.google_drive_url ? (
-                <a
-                  href={room.google_drive_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary inline-flex items-center gap-1"
-                >
+                <a href={room.google_drive_url} target="_blank" rel="noreferrer" className="text-primary inline-flex items-center gap-1 text-xs sm:text-sm">
                   Open <ExternalLink className="h-3 w-3" />
                 </a>
-              ) : (
-                "—"
-              )
+              ) : "—"
             }
           />
         </CardContent>
       </Card>
 
-      {/* ── ALL TABS INSIDE THIS ONE <Tabs> ── */}
       <Tabs defaultValue="tenants">
         <TabsList>
           <TabsTrigger value="tenants">Tenants</TabsTrigger>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="assets">Assets</TabsTrigger>
           <TabsTrigger value="photos">Photos</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="electricity">Electricity</TabsTrigger>
           <TabsTrigger value="expenses">Expenses</TabsTrigger>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
@@ -153,7 +136,7 @@ export default function RoomDetailPage() {
 
         <TabsContent value="tenants" className="space-y-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
               <CardTitle>Current Tenant</CardTitle>
               {!activeAlloc && (
                 <Button size="sm" onClick={() => setAllocOpen(true)}>
@@ -163,44 +146,28 @@ export default function RoomDetailPage() {
             </CardHeader>
             <CardContent>
               {activeAlloc && activeTenant ? (
-                <Link
-                  href={`/tenants/${activeTenant.id}`}
-                  className="flex items-center gap-3 group"
-                >
-                  <TenantAvatar
-                    path={activeTenant.profile_photo_url}
-                    name={activeTenant.full_name}
-                    className="h-12 w-12"
-                  />
-                  <div className="flex-1">
-                    <div className="font-medium group-hover:text-primary">
-                      {activeTenant.full_name}
-                    </div>
+                <Link href={`/tenants/${activeTenant.id}`} className="flex items-center gap-3 group">
+                  <TenantAvatar path={activeTenant.profile_photo_url} name={activeTenant.full_name} className="h-12 w-12" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium group-hover:text-primary truncate">{activeTenant.full_name}</div>
                     <div className="text-xs text-muted-foreground">
-                      Since {formatDate(activeAlloc.allocation_date)} · Rent ₹
-                      {activeAlloc.rent_amount.toLocaleString("en-IN")}
+                      Since {formatDate(activeAlloc.allocation_date)} · Rent ₹{activeAlloc.rent_amount.toLocaleString("en-IN")}
                     </div>
                   </div>
-                  <Bed className="h-4 w-4 text-muted-foreground" />
+                  <Bed className="h-4 w-4 text-muted-foreground shrink-0" />
                 </Link>
               ) : (
                 <EmptyState
                   title="No tenant currently allocated"
                   description="Allocate a tenant to this room."
-                  action={
-                    <Button size="sm" onClick={() => setAllocOpen(true)}>
-                      <Plus className="h-4 w-4 mr-1" /> Add Tenant
-                    </Button>
-                  }
+                  action={<Button size="sm" onClick={() => setAllocOpen(true)}><Plus className="h-4 w-4 mr-1" /> Add Tenant</Button>}
                 />
               )}
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Previous Tenants</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Previous Tenants</CardTitle></CardHeader>
             <CardContent>
               {!pastAllocs.length ? (
                 <p className="text-sm text-muted-foreground">No previous tenants.</p>
@@ -215,17 +182,13 @@ export default function RoomDetailPage() {
                         className="flex items-center gap-3 py-3 hover:bg-muted/40 -mx-2 px-2 rounded"
                       >
                         {t ? (
-                          <TenantAvatar
-                            path={t.profile_photo_url}
-                            name={t.full_name}
-                            className="h-9 w-9"
-                          />
+                          <TenantAvatar path={t.profile_photo_url} name={t.full_name} className="h-9 w-9" />
                         ) : (
                           <div className="h-9 w-9 rounded-full bg-muted" />
                         )}
-                        <div className="flex-1">
-                          <div className="font-medium">{t?.full_name ?? "Unknown"}</div>
-                          <div className="text-xs text-muted-foreground">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{t?.full_name ?? "Unknown"}</div>
+                          <div className="text-xs text-muted-foreground truncate">
                             {formatDate(a.allocation_date)} → {formatDate(a.deallocation_date)}
                           </div>
                         </div>
@@ -241,9 +204,7 @@ export default function RoomDetailPage() {
 
         <TabsContent value="overview" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Description</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Description</CardTitle></CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground whitespace-pre-line">
                 {room.description || "No description provided."}
@@ -258,32 +219,17 @@ export default function RoomDetailPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="assets">
-          <RoomAssets roomId={room.id} />
-        </TabsContent>
-
-        <TabsContent value="photos">
-          <RoomImages roomId={room.id} propertyId={propertyId} />
-        </TabsContent>
-
-        <TabsContent value="electricity">
-          <RoomElectricity roomId={room.id} propertyId={propertyId} />
-        </TabsContent>
-
-        <TabsContent value="expenses">
-          <RoomExpenses roomId={room.id} propertyId={propertyId} />
-        </TabsContent>
-
-        <TabsContent value="tasks">
-          <RoomTasks roomId={room.id} propertyId={propertyId} />
-        </TabsContent>
+        <TabsContent value="assets"><RoomAssets roomId={room.id} /></TabsContent>
+        <TabsContent value="photos"><RoomImages roomId={room.id} propertyId={propertyId} /></TabsContent>
+        <TabsContent value="documents"><RoomDocuments roomId={room.id} propertyId={propertyId} /></TabsContent>
+        <TabsContent value="electricity"><RoomElectricity roomId={room.id} propertyId={propertyId} /></TabsContent>
+        <TabsContent value="expenses"><RoomExpenses roomId={room.id} propertyId={propertyId} /></TabsContent>
+        <TabsContent value="tasks"><RoomTasks roomId={room.id} propertyId={propertyId} /></TabsContent>
       </Tabs>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit Room {room.room_number}</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Edit Room {room.room_number}</DialogTitle></DialogHeader>
           <RoomForm
             defaultValues={{
               room_number: room.room_number,
@@ -339,9 +285,9 @@ export default function RoomDetailPage() {
 
 function Info({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div>
+    <div className="min-w-0">
       <div className="text-xs uppercase text-muted-foreground">{label}</div>
-      <div className="text-sm font-medium mt-0.5">{value}</div>
+      <div className="text-sm font-medium mt-0.5 truncate">{value}</div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 "use client";
-import { Bell, LogOut, User, Moon, Sun } from "lucide-react";
+import { LogOut, User, Moon, Sun, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -23,7 +23,7 @@ export function Topbar() {
   }
 
   return (
-    <header className="h-14 border-b bg-background flex items-center justify-end gap-2 px-4">
+    <header className="hidden md:flex h-14 border-b bg-background items-center justify-end gap-2 px-4">
       <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
         {resolved === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </Button>
@@ -32,7 +32,7 @@ export function Topbar() {
       </Button>
       <div className="flex items-center gap-2 text-sm">
         <User className="h-4 w-4 text-muted-foreground" />
-        <span className="hidden sm:inline text-muted-foreground">{email}</span>
+        <span className="hidden sm:inline text-muted-foreground truncate max-w-[180px]">{email}</span>
       </div>
       <Button variant="ghost" size="icon" onClick={signOut} aria-label="Sign out">
         <LogOut className="h-4 w-4" />

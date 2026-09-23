@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { Plus, Package } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Plus, Package, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,7 +9,9 @@ import { Label } from "@/components/ui/label";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { Badge } from "@/components/ui/badge";
 import { DataTable, type Column } from "@/components/ui/data-table";
+import { PhotoGallery } from "@/components/photo-gallery";
 import { useProperty } from "@/features/properties/hooks";
 import { useRoomsWithOccupancy } from "@/features/rooms/hooks";
 import {
@@ -17,6 +19,7 @@ import {
   useDeleteInventoryItem, useInventorySummary,
 } from "@/features/expenses/hooks";
 import type { InventoryItemWithRoom } from "@/features/expenses/types";
+import type { PhotoMeta } from "@/lib/photos";
 
 const CONDITIONS = ["Good", "Fair", "Poor", "Broken"] as const;
 const STATUSES = ["available", "allocated", "broken", "retired"] as const;
@@ -47,6 +50,18 @@ export default function InventoryPage() {
     { key: "condition", header: "Condition", cell: (i) => <StatusBadge value={i.condition} /> },
     { key: "status", header: "Status", cell: (i) => <StatusBadge value={i.status === "available" ? "available" : i.status} /> },
     {
+      key: "photos",
+      header: "Photos",
+      cell: (i) => {
+        const n = Array.isArray((i as any).photos) ? (i as any).photos.length : 0;
+        return n > 0 ? (
+          <Badge variant="outline" className="gap-1"><ImageIcon className="h-3 w-3" /> {n}</Badge>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        );
+      },
+    },
+    {
       key: "actions",
       header: "",
       cell: (i) => (
@@ -64,8 +79,8 @@ export default function InventoryPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Inventory</h1>
-          <p className="text-sm text-muted-foreground">Track chairs, beds, and other items</p>
+          <h1 className="text-xl sm:text-2xl font-semibold">Inventory</h1>
+          <p className="text-sm text-muted-foreground">Track chairs, beds, and other items with photos</p>
         </div>
         <Button onClick={() => { setEditing(null); setOpen(true); }}>
           <Plus className="h-4 w-4 mr-1" /> Add Item
@@ -82,45 +97,25 @@ export default function InventoryPage() {
 
       <Card>
         <CardHeader>
-          <Input
-            placeholder="Search by item, identifier, or room…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="max-w-sm"
-          />
+          <Input placeholder="Search by item, identifier, or room…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-12 bg-muted rounded animate-pulse" />
-              ))}
-            </div>
+            <div className="space-y-2">{[...Array(5)].map((_, i) => <div key={i} className="h-12 bg-muted rounded animate-pulse" />)}</div>
           ) : !filtered.length ? (
             <EmptyState
               icon={Package}
               title={search ? "No items match" : "No inventory items"}
               description={search ? "Try another keyword." : "Add chairs, beds and other items to track allocation."}
-              action={
-                !search && (
-                  <Button onClick={() => { setEditing(null); setOpen(true); }}>
-                    <Plus className="h-4 w-4 mr-1" /> Add Item
-                  </Button>
-                )
-              }
+              action={!search && <Button onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4 mr-1" /> Add Item</Button>}
             />
           ) : (
-            <DataTable columns={columns} rows={filtered} pageSize={20} emptyState={<EmptyState title="No items" />} />
+            <DataTable columns={columns} rows={filtered} pageSize={20} forceTableMobile emptyState={<EmptyState title="No items" />} />
           )}
         </CardContent>
       </Card>
 
-      <InventoryFormDialog
-        open={open}
-        onOpenChange={setOpen}
-        propertyId={propertyId}
-        editing={editing}
-      />
+      <InventoryFormDialog open={open} onOpenChange={setOpen} propertyId={propertyId} editing={editing} />
 
       <ConfirmDialog
         open={!!toDelete}
@@ -134,21 +129,12 @@ export default function InventoryPage() {
   );
 }
 
-function SummaryCard({
-  label, value, tone = "default",
-}: { label: string; value: number; tone?: "default" | "success" | "info" | "destructive" }) {
-  const cls =
-    tone === "success" ? "text-green-600" :
-    tone === "info" ? "text-blue-600" :
-    tone === "destructive" ? "text-destructive" : "";
+function SummaryCard({ label, value, tone = "default" }: { label: string; value: number; tone?: any }) {
+  const cls = tone === "success" ? "text-green-600" : tone === "info" ? "text-blue-600" : tone === "destructive" ? "text-destructive" : "";
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className={`text-2xl font-semibold ${cls}`}>{value}</div>
-      </CardContent>
+      <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle></CardHeader>
+      <CardContent><div className={`text-xl sm:text-2xl font-semibold ${cls}`}>{value}</div></CardContent>
     </Card>
   );
 }
@@ -165,34 +151,34 @@ function InventoryFormDialog({
   const create = useCreateInventoryItem(propertyId);
   const update = useUpdateInventoryItem(propertyId);
 
-  const [itemType, setItemType] = useState(editing?.item_type ?? "");
-  const [identifier, setIdentifier] = useState(editing?.identifier ?? "");
-  const [condition, setCondition] = useState<typeof CONDITIONS[number]>(editing?.condition ?? "Good");
-  const [status, setStatus] = useState<typeof STATUSES[number]>(editing?.status ?? "available");
-  const [roomId, setRoomId] = useState(editing?.room_id ?? "");
+  const [itemType, setItemType] = useState("");
+  const [identifier, setIdentifier] = useState("");
+  const [condition, setCondition] = useState<typeof CONDITIONS[number]>("Good");
+  const [status, setStatus] = useState<typeof STATUSES[number]>("available");
+  const [roomId, setRoomId] = useState("");
+  const [photos, setPhotos] = useState<PhotoMeta[]>([]);
 
-  // Reset when the dialog opens with a new item
-  // Using a ref-like keyed approach: parent should pass key={editing?.id ?? "new"}
-  useState(() => {
-    if (open) {
-      setItemType(editing?.item_type ?? "");
-      setIdentifier(editing?.identifier ?? "");
-      setCondition(editing?.condition ?? "Good");
-      setStatus(editing?.status ?? "available");
-      setRoomId(editing?.room_id ?? "");
-    }
-  });
+  useEffect(() => {
+    if (!open) return;
+    setItemType(editing?.item_type ?? "");
+    setIdentifier(editing?.identifier ?? "");
+    setCondition((editing?.condition as any) ?? "Good");
+    setStatus((editing?.status as any) ?? "available");
+    setRoomId(editing?.room_id ?? "");
+    setPhotos(Array.isArray((editing as any)?.photos) ? (editing as any).photos : []);
+  }, [open, editing?.id]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!itemType) return;
-    const payload = {
+    const payload: any = {
       property_id: propertyId,
       item_type: itemType,
       identifier: identifier || null,
       condition,
       status,
       room_id: roomId || null,
+      photos,
     };
     if (editing) {
       await update.mutateAsync({ id: editing.id, patch: payload });
@@ -202,50 +188,42 @@ function InventoryFormDialog({
     onOpenChange(false);
   }
 
+  const scope = editing ? `inventory/${editing.id}` : `inventory/draft-${Date.now()}`;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{editing ? "Edit Item" : "Add Item"}</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>{editing ? "Edit Item" : "Add Item"}</DialogTitle></DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1">
             <Label>Item Type *</Label>
-            <Input
-              value={itemType}
-              onChange={(e) => setItemType(e.target.value)}
-              placeholder="Chair / Bed / Table"
-              required
-            />
+            <Input value={itemType} onChange={(e) => setItemType(e.target.value)} placeholder="Chair / Bed / Table" required />
           </div>
 
           <div className="space-y-1">
             <Label>Identifier (optional)</Label>
-            <Input
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="C102"
-            />
+            <Input value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="C102" />
           </div>
+
+          <PhotoGallery
+            photos={photos}
+            onChange={setPhotos}
+            propertyId={propertyId}
+            scope={scope}
+            label="Item Photos (condition, damage, etc.)"
+            max={6}
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>Condition</Label>
-              <select
-                value={condition}
-                onChange={(e) => setCondition(e.target.value as any)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-              >
+              <select value={condition} onChange={(e) => setCondition(e.target.value as any)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
                 {CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div className="space-y-1">
               <Label>Status</Label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as any)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-              >
+              <select value={status} onChange={(e) => setStatus(e.target.value as any)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
                 {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
@@ -253,11 +231,7 @@ function InventoryFormDialog({
 
           <div className="space-y-1">
             <Label>Room (optional)</Label>
-            <select
-              value={roomId}
-              onChange={(e) => setRoomId(e.target.value)}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-            >
+            <select value={roomId} onChange={(e) => setRoomId(e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
               <option value="">Unallocated</option>
               {rooms.map((r) => <option key={r.id} value={r.id}>{r.room_number}</option>)}
             </select>

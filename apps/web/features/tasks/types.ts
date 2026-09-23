@@ -13,6 +13,7 @@ export type Task = {
   attachments: any;
   notes: string | null;
   completed_at: string | null;
+  photos: { path: string; name: string; mime: string; size: number }[] | null;
   created_at: string;
   updated_at: string;
 };

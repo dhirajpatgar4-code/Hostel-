@@ -92,6 +92,7 @@ export async function createBill(input: {
   meter_reading?: number | null;
   status?: ElectricityBillStatus;
   notes?: string | null;
+  bill_photo_url?: string | null;
 }): Promise<ElectricityBill> {
   const { data, error } = await sb().from("electricity_bills").insert(input).select().single();
   if (error) throw error;
@@ -123,7 +124,7 @@ export async function uploadBillPhoto(propertyId: string, roomId: string, file: 
     .storage.from("electricity-bills")
     .upload(path, file, { contentType: file.type, upsert: false });
   if (upErr) throw upErr;
-  return path; // store the path; read via signed URL
+  return path;
 }
 
 export async function getBillPhotoSignedUrl(path: string, expiresIn = 3600): Promise<string> {
@@ -139,7 +140,6 @@ export async function generateBillsForMonth(
   month: number,
   year: number
 ): Promise<number> {
-  // Find all rooms in this property that don't yet have a bill for this period.
   const { data: rooms, error: roomErr } = await sb()
     .from("rooms")
     .select("id")
@@ -199,7 +199,6 @@ export async function getElectricitySummary(
   const totalPending = rows.filter((b: any) => b.status !== "paid").reduce((s, b: any) => s + Number(b.bill_amount || 0), 0);
   const photoPending = rows.filter((b: any) => !b.bill_photo_url).length;
 
-  // Previous month
   const prevDate = new Date(year, month - 2, 1);
   const prevMonth = prevDate.getMonth() + 1;
   const prevYear = prevDate.getFullYear();
@@ -222,5 +221,107 @@ export async function getElectricitySummary(
     billCount: rows.length,
     month,
     year,
+  };
+}
+
+// ─── BUILDING BILLS ────────────────────────────────────────
+
+export type BuildingBill = {
+  id: string;
+  property_id: string;
+  billing_month: number;
+  billing_year: number;
+  bill_amount: number;
+  units_consumed: number | null;
+  bill_date: string | null;
+  due_date: string | null;
+  bill_photo_path: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export async function getBuildingBill(
+  propertyId: string,
+  month: number,
+  year: number
+): Promise<BuildingBill | null> {
+  const { data, error } = await sb()
+    .from("building_electricity_bills")
+    .select("*")
+    .eq("property_id", propertyId)
+    .eq("billing_month", month)
+    .eq("billing_year", year)
+    .maybeSingle();
+  if (error && error.code !== "PGRST116") throw error;
+  return data ?? null;
+}
+
+export async function upsertBuildingBill(input: {
+  property_id: string;
+  billing_month: number;
+  billing_year: number;
+  bill_amount: number;
+  units_consumed?: number | null;
+  bill_date?: string | null;
+  due_date?: string | null;
+  bill_photo_path?: string | null;
+  notes?: string | null;
+}): Promise<BuildingBill> {
+  const { data, error } = await sb()
+    .from("building_electricity_bills")
+    .upsert(input, { onConflict: "property_id,billing_month,billing_year" })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function uploadBuildingBillPhoto(
+  propertyId: string,
+  month: number,
+  year: number,
+  file: File
+): Promise<string> {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const path = `${propertyId}/building/${year}-${String(month).padStart(2, "0")}/${crypto.randomUUID()}.${ext}`;
+  const { error: upErr } = await sb()
+    .storage.from("electricity-bills")
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (upErr) throw upErr;
+  return path;
+}
+
+export async function getBuildingBillPhotoSignedUrl(path: string, expiresIn = 3600): Promise<string> {
+  const { data, error } = await sb()
+    .storage.from("electricity-bills")
+    .createSignedUrl(path, expiresIn);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+export async function getElectricityComparison(propertyId: string, month: number, year: number) {
+  const [building, roomsSum] = await Promise.all([
+    getBuildingBill(propertyId, month, year),
+    sb()
+      .from("electricity_bills")
+      .select("bill_amount, rooms!inner(property_id)")
+      .eq("rooms.property_id", propertyId)
+      .eq("billing_month", month)
+      .eq("billing_year", year),
+  ]);
+
+  const roomTotal = (roomsSum.data ?? []).reduce(
+    (s: number, r: any) => s + Number(r.bill_amount || 0),
+    0
+  );
+
+  const buildingTotal = Number(building?.bill_amount ?? 0);
+
+  return {
+    building,
+    buildingTotal,
+    roomTotal,
+    variance: buildingTotal - roomTotal,
   };
 }

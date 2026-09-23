@@ -92,7 +92,7 @@ function DocumentsInner() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Documents</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">Documents</h1>
           <p className="text-sm text-muted-foreground">Folders and files — like Google Drive</p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -214,7 +214,7 @@ function DocumentsInner() {
                     <CardContent className="p-0">
                       <div className="divide-y">
                         {folders.map((f) => (
-                          <div key={f.id} className="flex items-center justify-between px-4 py-3 hover:bg-muted/30">
+                          <div key={f.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30">
                             <button
                               onClick={() => navigateToFolder(f.id)}
                               className="flex items-center gap-3 flex-1 text-left"
@@ -350,7 +350,7 @@ function FileRow({
 }) {
   const size = doc.file_size ? (doc.file_size / 1024).toFixed(1) + " KB" : "";
   return (
-    <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/30">
+    <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30">
       <button onClick={() => onOpen(doc)} className="flex items-center gap-3 flex-1 text-left min-w-0">
         <FileText className="h-5 w-5 text-blue-500 shrink-0" />
         <div className="min-w-0">

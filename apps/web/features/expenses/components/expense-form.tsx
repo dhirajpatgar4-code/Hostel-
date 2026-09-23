@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PhotoGallery } from "@/components/photo-gallery";
 import { useRoomsWithOccupancy } from "@/features/rooms/hooks";
 import { useExpenseCategories, useCreateExpense, useUpdateExpense } from "../hooks";
 import type { ExpenseWithRelations } from "../types";
+import type { PhotoMeta } from "@/lib/photos";
 
 type Props = {
   open: boolean;
@@ -30,6 +32,7 @@ export function ExpenseFormDialog({ open, onOpenChange, propertyId, editing }: P
   const [method, setMethod] = useState<"cash" | "upi" | "bank_transfer" | "card" | "other">("cash");
   const [paidTo, setPaidTo] = useState("");
   const [notes, setNotes] = useState("");
+  const [photos, setPhotos] = useState<PhotoMeta[]>([]);
 
   useEffect(() => {
     if (!open) return;
@@ -41,12 +44,13 @@ export function ExpenseFormDialog({ open, onOpenChange, propertyId, editing }: P
     setMethod((editing?.payment_method as any) ?? "cash");
     setPaidTo(editing?.paid_to ?? "");
     setNotes(editing?.notes ?? "");
+    setPhotos(Array.isArray((editing as any)?.photos) ? (editing as any).photos : []);
   }, [open, editing?.id]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!amount) return;
-    const payload = {
+    const payload: any = {
       property_id: propertyId,
       room_id: roomId || null,
       category_id: categoryId || null,
@@ -56,6 +60,7 @@ export function ExpenseFormDialog({ open, onOpenChange, propertyId, editing }: P
       payment_method: method,
       paid_to: paidTo || null,
       notes: notes || null,
+      photos,
     };
     if (editing) {
       await update.mutateAsync({ id: editing.id, patch: payload });
@@ -66,10 +71,11 @@ export function ExpenseFormDialog({ open, onOpenChange, propertyId, editing }: P
   }
 
   const canSave = !!amount && !create.isPending && !update.isPending;
+  const scope = editing ? `expenses/${editing.id}` : `expenses/draft-${Date.now()}`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editing ? "Edit Expense" : "Add Expense"}</DialogTitle>
         </DialogHeader>
@@ -88,28 +94,16 @@ export function ExpenseFormDialog({ open, onOpenChange, propertyId, editing }: P
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>Category</Label>
-              <select
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-              >
+              <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
                 <option value="">Uncategorized</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
+                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div className="space-y-1">
               <Label>Room (optional)</Label>
-              <select
-                value={roomId}
-                onChange={(e) => setRoomId(e.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-              >
+              <select value={roomId} onChange={(e) => setRoomId(e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
                 <option value="">Hostel-wide</option>
-                {rooms.map((r) => (
-                  <option key={r.id} value={r.id}>{r.room_number}</option>
-                ))}
+                {rooms.map((r) => <option key={r.id} value={r.id}>{r.room_number}</option>)}
               </select>
             </div>
           </div>
@@ -119,14 +113,19 @@ export function ExpenseFormDialog({ open, onOpenChange, propertyId, editing }: P
             <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. Fan repair" />
           </div>
 
+          <PhotoGallery
+            photos={photos}
+            onChange={setPhotos}
+            propertyId={propertyId}
+            scope={scope}
+            label="Bill / Receipt Photos"
+            max={5}
+          />
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>Payment Method</Label>
-              <select
-                value={method}
-                onChange={(e) => setMethod(e.target.value as any)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-              >
+              <select value={method} onChange={(e) => setMethod(e.target.value as any)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
                 <option value="cash">Cash</option>
                 <option value="upi">UPI</option>
                 <option value="bank_transfer">Bank Transfer</option>

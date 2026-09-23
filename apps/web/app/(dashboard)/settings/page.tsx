@@ -40,7 +40,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Settings</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold">Settings</h1>
         <p className="text-sm text-muted-foreground">Manage hostel, team, notifications and appearance</p>
       </div>
 
@@ -259,7 +259,7 @@ function TeamTab({ propertyId }: { propertyId: string }) {
           {invites.length > 0 && (
             <div className="divide-y border rounded-lg">
               {invites.map((inv) => (
-                <div key={inv.id} className="flex items-center justify-between p-3">
+                <div key={inv.id} className="flex flex-wrap items-center justify-between gap-3 p-3">
                   <div>
                     <div className="font-medium text-sm">{inv.email}</div>
                     <div className="text-xs text-muted-foreground">
@@ -297,7 +297,7 @@ function TeamTab({ propertyId }: { propertyId: string }) {
           ) : (
             <div className="divide-y">
               {team.map((m) => (
-                <div key={m.id} className="flex items-center justify-between py-3">
+                <div key={m.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                   <div>
                     <div className="font-medium text-sm">{m.full_name || m.user_id.slice(0, 8) + "…"}</div>
                     <div className="text-xs text-muted-foreground font-mono">{m.user_id.slice(0, 8)}…</div>
@@ -369,7 +369,7 @@ function NotificationsTab({ userId }: { userId: string | null }) {
         {items.map((it) => (
           <label
             key={it.key}
-            className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/40 cursor-pointer"
+            className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg border hover:bg-muted/40 cursor-pointer"
           >
             <div>
               <div className="font-medium text-sm">{it.label}</div>

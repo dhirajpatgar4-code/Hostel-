@@ -1,26 +1,24 @@
 "use client";
-import { useToast } from "@/components/ui/toaster";
-import { Sparkles, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Sparkles, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { DataTable, type Column } from "@/components/ui/data-table";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/toaster";
 import { useProperty } from "@/features/properties/hooks";
 import { useRoomsWithOccupancy } from "@/features/rooms/hooks";
 import {
   useBills, useElectricitySummary, useGenerateBills,
-  useCreateBill, useUpdateBill, useMarkBillPaid, useDeleteBill,
-  useUploadBillPhoto,
+  useCreateBill, useUpdateBill, useMarkBillPaid, useUploadBillPhoto,
 } from "@/features/electricity/hooks";
 import { BillPhotoViewer } from "@/features/electricity/components/bill-photo-viewer";
+import { BuildingBillCard } from "@/features/electricity/components/building-bill-card";
 import { formatCurrency, monthName, formatDate } from "@/lib/utils";
 import type { ElectricityBillWithRoom } from "@/features/electricity/types";
 
@@ -45,7 +43,7 @@ export default function ElectricityPage() {
     { key: "room", header: "Room", cell: (b) => <span className="font-medium">{b.room_number}</span> },
     { key: "period", header: "Period", cell: (b) => `${monthName(b.billing_month)} ${b.billing_year}` },
     { key: "amount", header: "Amount", cell: (b) => formatCurrency(b.bill_amount) },
-    { key: "due", header: "Due", cell: (b) => b.due_date ? formatDate(b.due_date) : "—" },
+    { key: "due", header: "Due", cell: (b) => (b.due_date ? formatDate(b.due_date) : "—") },
     { key: "reading", header: "Reading", cell: (b) => b.meter_reading ?? "—" },
     {
       key: "photo",
@@ -63,16 +61,10 @@ export default function ElectricityPage() {
       header: "",
       cell: (b) => (
         <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => { setEditing(b); setEditOpen(true); }}
-          >
+          <Button size="sm" variant="ghost" onClick={() => { setEditing(b); setEditOpen(true); }}>
             Edit
           </Button>
-          {b.status !== "paid" && (
-            <MarkPaidButton id={b.id} />
-          )}
+          {b.status !== "paid" && <MarkPaidButton id={b.id} />}
         </div>
       ),
     },
@@ -84,7 +76,7 @@ export default function ElectricityPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Electricity</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">Electricity</h1>
           <p className="text-sm text-muted-foreground">Track meters, bills and photos</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -126,20 +118,26 @@ export default function ElectricityPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Summary cards — 4 stats + Building Bill on the right */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         <SummaryCard label="This Month Total" value={formatCurrency(summary.data?.totalBills ?? 0)} />
         <SummaryCard label="Collected" value={formatCurrency(summary.data?.totalPaid ?? 0)} tone="success" />
         <SummaryCard label="Pending" value={formatCurrency(summary.data?.totalPending ?? 0)} tone="warning" />
         <SummaryCard label="Photos Missing" value={String(summary.data?.photoPending ?? 0)} tone="destructive" />
+        <div className="col-span-2 lg:col-span-1">
+          <BuildingBillCard propertyId={propertyId} month={month} year={year} />
+        </div>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Bills — {monthName(month)} {year}</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle>Room Bills — {monthName(month)} {year}</CardTitle></CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="space-y-2">{[...Array(5)].map((_, i) => <div key={i} className="h-12 bg-muted rounded animate-pulse" />)}</div>
+            <div className="space-y-2">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-12 bg-muted rounded animate-pulse" />
+              ))}
+            </div>
           ) : !bills.length ? (
             <EmptyState
               title="No bills for this period"
@@ -156,9 +154,8 @@ export default function ElectricityPage() {
         </CardContent>
       </Card>
 
-      {/* Generate dialog */}
       {genOpen && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60" onClick={() => setGenOpen(false)}>
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" onClick={() => setGenOpen(false)}>
           <div className="bg-background rounded-lg p-6 max-w-sm w-full space-y-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-semibold text-lg">Generate for {monthName(month)} {year}</h3>
             <p className="text-sm text-muted-foreground">
@@ -171,9 +168,9 @@ export default function ElectricityPage() {
                   await generate.mutateAsync({ month, year });
                   setGenOpen(false);
                 }}
-                disabled={generate.isPending}
+                loading={generate.isPending}
               >
-                {generate.isPending ? "Generating…" : "Generate"}
+                Generate
               </Button>
             </div>
           </div>
@@ -181,6 +178,7 @@ export default function ElectricityPage() {
       )}
 
       <BillEditDialog
+        key={editing?.id ?? "new"}
         open={editOpen}
         onOpenChange={setEditOpen}
         propertyId={propertyId}
@@ -215,13 +213,15 @@ function MarkPaidButton({ id }: { id: string }) {
   const { property } = useProperty();
   const mark = useMarkBillPaid(property?.id ?? "");
   return (
-    <Button size="sm" variant="ghost" onClick={() => mark.mutate(id)} disabled={mark.isPending}>
-      {mark.isPending ? "…" : "Mark Paid"}
+    <Button size="sm" variant="ghost" onClick={() => mark.mutate(id)} loading={mark.isPending}>
+      Mark Paid
     </Button>
   );
 }
 
-// ─── BILL EDIT DIALOG ─────────────────────────────────────
+// ═══════════════════════════════════════════════════════════
+// BILL EDIT DIALOG — sticky footer
+// ═══════════════════════════════════════════════════════════
 
 function BillEditDialog({
   open, onOpenChange, propertyId, bill, defaultMonth, defaultYear,
@@ -237,7 +237,7 @@ function BillEditDialog({
   const create = useCreateBill(propertyId);
   const update = useUpdateBill(propertyId);
   const upload = useUploadBillPhoto(propertyId, bill?.room_id ?? "");
-  const { success, error: toastErr } = useToast();
+  const { error: toastErr } = useToast();
 
   const [roomId, setRoomId] = useState(bill?.room_id ?? "");
   const [month, setMonth] = useState(bill?.billing_month ?? defaultMonth);
@@ -249,8 +249,7 @@ function BillEditDialog({
   const [notes, setNotes] = useState(bill?.notes ?? "");
   const [photoPath, setPhotoPath] = useState<string | null>(bill?.bill_photo_url ?? null);
 
-  // Reset when opening
-    useEffect(() => {
+  useEffect(() => {
     if (!open) return;
     setRoomId(bill?.room_id ?? "");
     setMonth(bill?.billing_month ?? defaultMonth);
@@ -261,14 +260,20 @@ function BillEditDialog({
     setReading(bill?.meter_reading != null ? String(bill.meter_reading) : "");
     setNotes(bill?.notes ?? "");
     setPhotoPath(bill?.bill_photo_url ?? null);
-  }, [open, bill, defaultMonth, defaultYear]);
+  }, [open, bill?.id, defaultMonth, defaultYear]);
+
   async function handlePhoto(files: FileList | null) {
-    if (!files?.[0] || !roomId) {
-      if (!roomId) toastErr("Select a room first", "Room is required");
+    if (!files?.[0]) return;
+    const file = files[0];
+    const roomForUpload = roomId || bill?.room_id;
+    if (!roomForUpload) {
+      toastErr("Select a room first", "Room is required before uploading a photo");
       return;
     }
-    const file = files[0];
-    if (file.size > 10 * 1024 * 1024) return toastErr("Too large", "Max 10 MB");
+    if (file.size > 10 * 1024 * 1024) {
+      toastErr("Too large", "Max 10 MB");
+      return;
+    }
     try {
       const path = await upload.mutateAsync(file);
       setPhotoPath(path);
@@ -277,123 +282,131 @@ function BillEditDialog({
     }
   }
 
- async function submit(e: React.FormEvent) {
-  e.preventDefault();
-  const finalRoomId = roomId || bill?.room_id || "";
-  if (!finalRoomId || !amount) return;
-  const payload = {
-    room_id: finalRoomId,
-    billing_month: month,
-    billing_year: year,
-    bill_amount: Number(amount),
-    bill_date: billDate || null,
-    due_date: dueDate || null,
-    meter_reading: reading ? Number(reading) : null,
-    bill_photo_url: photoPath,
-    notes: notes || null,
-  };
-  if (bill) {
-    await update.mutateAsync({ id: bill.id, patch: payload });
-  } else {
-    await create.mutateAsync(payload);
-  }
-  onOpenChange(false);
-}
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const finalRoomId = roomId || bill?.room_id || "";
+    if (!finalRoomId || !amount) return;
 
+    const payload = {
+      room_id: finalRoomId,
+      billing_month: month,
+      billing_year: year,
+      bill_amount: Number(amount),
+      bill_date: billDate || null,
+      due_date: dueDate || null,
+      meter_reading: reading ? Number(reading) : null,
+      bill_photo_url: photoPath,
+      notes: notes || null,
+    };
+
+    if (bill) {
+      await update.mutateAsync({ id: bill.id, patch: payload });
+    } else {
+      await create.mutateAsync(payload);
+    }
+    onOpenChange(false);
+  }
+
+  const canSave =
+    (!bill ? !!roomId : true) && !!amount && !create.isPending && !update.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{bill ? `Edit Bill — Room ${bill.room_number}` : "Add Bill"}</DialogTitle>
+      <DialogContent className="max-w-lg p-0 flex flex-col max-h-[calc(100vh-2rem)] sm:max-h-[90vh]">
+        <DialogHeader className="px-6 pt-6 pb-3 border-b">
+          <DialogTitle>
+            {bill ? `Edit Bill — Room ${bill.room_number}` : "Add Bill"}
+          </DialogTitle>
         </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
-          {!bill && (
-            <div className="space-y-1">
-              <Label>Room *</Label>
-              <select
-                value={roomId}
-                onChange={(e) => setRoomId(e.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                required
-              >
-                <option value="">Select room</option>
-                {rooms.map((r) => (
-                  <option key={r.id} value={r.id}>{r.room_number}</option>
-                ))}
-              </select>
-            </div>
-          )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label>Month *</Label>
-              <select
-                value={month}
-                onChange={(e) => setMonth(Number(e.target.value))}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-              >
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                  <option key={m} value={m}>{monthName(m)}</option>
-                ))}
-              </select>
+        <form onSubmit={submit} className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            {!bill && (
+              <div className="space-y-1">
+                <Label>Room *</Label>
+                <select
+                  value={roomId}
+                  onChange={(e) => setRoomId(e.target.value)}
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  required
+                >
+                  <option value="">Select room</option>
+                  {rooms.map((r) => (
+                    <option key={r.id} value={r.id}>{r.room_number}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label>Month *</Label>
+                <select
+                  value={month}
+                  onChange={(e) => setMonth(Number(e.target.value))}
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                    <option key={m} value={m}>{monthName(m)}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <Label>Year *</Label>
+                <Input type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} />
+              </div>
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label>Bill Amount (₹) *</Label>
+                <Input type="number" min={0} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+              </div>
+              <div className="space-y-1">
+                <Label>Meter Reading</Label>
+                <Input type="number" min={0} step="0.01" value={reading} onChange={(e) => setReading(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label>Bill Date</Label>
+                <Input type="date" value={billDate} onChange={(e) => setBillDate(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label>Due Date</Label>
+                <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Bill Photo</Label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handlePhoto(e.target.files)}
+                className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-primary file:text-primary-foreground file:cursor-pointer hover:file:bg-primary/90"
+              />
+              {photoPath && <p className="text-xs text-muted-foreground">Photo uploaded ✓</p>}
+              {upload.isPending && <p className="text-xs text-muted-foreground">Uploading…</p>}
+            </div>
+
             <div className="space-y-1">
-              <Label>Year *</Label>
-              <Input type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} />
+              <Label>Notes</Label>
+              <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label>Bill Amount (₹) *</Label>
-              <Input type="number" min={0} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required />
-            </div>
-            <div className="space-y-1">
-              <Label>Meter Reading</Label>
-              <Input type="number" min={0} step="0.01" value={reading} onChange={(e) => setReading(e.target.value)} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label>Bill Date</Label>
-              <Input type="date" value={billDate} onChange={(e) => setBillDate(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label>Due Date</Label>
-              <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Bill Photo</Label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => handlePhoto(e.target.files)}
-              className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-primary file:text-primary-foreground file:cursor-pointer"
-            />
-            {photoPath && <p className="text-xs text-muted-foreground">Photo uploaded ✓</p>}
-            {upload.isPending && <p className="text-xs text-muted-foreground">Uploading…</p>}
-          </div>
-
-          <div className="space-y-1">
-            <Label>Notes</Label>
-            <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button
-  type="submit"
-  disabled={(!bill && !roomId) || !amount || create.isPending || update.isPending}
-></Button>
+          <div className="flex justify-end gap-2 px-6 py-4 border-t bg-background shrink-0">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!canSave} className="min-w-[100px]">
+              {create.isPending || update.isPending ? "Saving…" : "Save"}
+            </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
   );
 }
-
-// Avoid an unused import warning

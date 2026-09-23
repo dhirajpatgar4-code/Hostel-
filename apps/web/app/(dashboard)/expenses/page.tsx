@@ -70,7 +70,7 @@ export default function ExpensesPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Expenses</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">Expenses</h1>
           <p className="text-sm text-muted-foreground">Track all hostel and room expenses</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -91,7 +91,7 @@ export default function ExpensesPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-destructive">
+            <div className="text-xl sm:text-2xl font-semibold text-destructive">
               {formatCurrency(summary.data?.total ?? 0)}
             </div>
           </CardContent>

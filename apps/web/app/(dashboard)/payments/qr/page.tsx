@@ -156,9 +156,9 @@ export default function QRCodesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Payment QR Codes</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">Payment QR Codes</h1>
           <p className="text-sm text-muted-foreground">
             Store UPI QRs for quick display, download and sharing with tenants
           </p>

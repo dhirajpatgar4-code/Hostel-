@@ -166,9 +166,9 @@ export async function uploadPropertyLogo(propertyId: string, file: File): Promis
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
   const path = `${propertyId}/logo.${ext}`;
   const { error: upErr } = await sb()
-    .storage.from("documents")
+    .storage.from("branding")
     .upload(path, file, { contentType: file.type, upsert: true });
   if (upErr) throw upErr;
-  const { data } = sb().storage.from("documents").getPublicUrl(path);
+  const { data } = sb().storage.from("branding").getPublicUrl(path);
   return data.publicUrl;
 }

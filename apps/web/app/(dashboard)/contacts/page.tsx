@@ -78,7 +78,7 @@ export default function ContactsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Contacts</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">Contacts</h1>
           <p className="text-sm text-muted-foreground">Phone directory — electricians, plumbers, etc.</p>
         </div>
         <div className="flex gap-2">

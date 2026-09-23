@@ -10,6 +10,7 @@ export type Expense = {
   paid_to: string | null;
   receipt_url: string | null;
   notes: string | null;
+  photos: { path: string; name: string; mime: string; size: number }[] | null;
   created_at: string;
   updated_at: string;
 };
@@ -35,6 +36,7 @@ export type InventoryItem = {
   condition: "Good" | "Fair" | "Poor" | "Broken";
   status: "available" | "allocated" | "broken" | "retired";
   room_id: string | null;
+  photos: { path: string; name: string; mime: string; size: number }[] | null;
   created_at: string;
   updated_at: string;
 };

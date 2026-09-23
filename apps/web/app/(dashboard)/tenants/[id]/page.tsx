@@ -87,7 +87,7 @@ export default function TenantDetailPage() {
 
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold">{tenant.full_name}</h1>
+            <h1 className="text-xl sm:text-2xl font-semibold">{tenant.full_name}</h1>
             <StatusBadge value={tenant.status} />
           </div>
           <p className="text-sm text-muted-foreground">
@@ -177,7 +177,7 @@ export default function TenantDetailPage() {
               ) : (
                 <div className="divide-y">
                   {pastAllocs.map((a) => (
-                    <div key={a.id} className="py-3 flex items-center justify-between">
+                    <div key={a.id} className="py-3 flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <div className="font-medium">Room {a.room_id.slice(0, 8)}…</div>
                         <div className="text-xs text-muted-foreground">
@@ -281,7 +281,7 @@ function TenantPaymentsTab({ tenantId }: { tenantId: string }) {
         ) : (
           <div className="divide-y">
             {payments.map((p) => (
-              <div key={p.id} className="py-3 flex items-center justify-between">
+              <div key={p.id} className="py-3 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="font-medium">{formatCurrency(p.amount)}</div>
                   <div className="text-xs text-muted-foreground">
@@ -315,7 +315,7 @@ function TenantRentTab({ tenantId }: { tenantId: string }) {
         ) : (
           <div className="divide-y">
             {rents.map((r) => (
-              <div key={r.id} className="py-3 flex items-center justify-between">
+              <div key={r.id} className="py-3 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="font-medium">{monthName(r.month)} {r.year}</div>
                   <div className="text-xs text-muted-foreground">Due {formatDate(r.due_date)}</div>
@@ -389,7 +389,7 @@ function TenantDepositsTab({ tenantId }: { tenantId: string }) {
         ) : (
           <div className="divide-y">
             {deposits.map((d) => (
-              <div key={d.id} className="py-3 flex items-center justify-between">
+              <div key={d.id} className="py-3 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="font-medium">{formatCurrency(d.amount)}</div>
                   <div className="text-xs text-muted-foreground">
